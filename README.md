@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/maxibor/kraken-nf.svg?branch=master)](https://travis-ci.org/maxibor/kraken-nf)
+
 # Kraken-nf
 
 Simple Kraken2 Nextflow pipeline
