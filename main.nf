@@ -79,7 +79,7 @@ process AdapterRemoval {
 process miniKraken {
     tag "$name"
 
-    conda 'bioconda::kraken2=2.0.8_beta'
+    conda 'bioconda::kraken2'
 
     label 'intenso'
 
