@@ -50,13 +50,11 @@ def parse_kraken(infile, countlim):
 
     '''
     with open(infile, 'r') as f:
-        valid_taxrank = ['U', 'G']
         resdict = {}
         csvreader = csv.reader(f, delimiter='\t')
         for line in csvreader:
             reads = int(line[1])
-            taxrank = line[3]
-            if reads >= countlim and taxrank in valid_taxrank:
+            if reads >= countlim:
                 taxid = line[4]
                 resdict[taxid] = reads
         return(resdict)
@@ -71,10 +69,10 @@ def write_output(resdict, infile, outfile):
 
 
 if __name__ == '__main__':
-    INFILE, COUNTLIM, OUTFILE = _get_args()
+    INFILE, COUNTLIM, outfile = _get_args()
 
-    if not OUTFILE:
-        OUTFILE = _get_basename(INFILE)+".kraken_parsed.csv"
+    if not outfile:
+        outfile = _get_basename(INFILE)+".kraken_parsed.csv"
 
     tmp_dict = parse_kraken(infile=INFILE, countlim=COUNTLIM)
-    write_output(resdict=tmp_dict, infile=INFILE, outfile=OUTFILE)
+    write_output(resdict=tmp_dict, infile=INFILE, outfile=outfile)

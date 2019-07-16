@@ -65,6 +65,7 @@ Mandatory arguments:
   --krakendb                    Path to MiniKraken2_v2_8GB Database
 
 Settings:
+  --minhit                         Minimum number of Kraken hits to report Taxonomic level. Defaults to 50
   --phred                       Specifies the fastq quality encoding (33 | 64). Defaults to 33
   --pairedEnd                   Specified if reads are paired-end (true | false). Default = true
 

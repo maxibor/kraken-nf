@@ -7,6 +7,7 @@ params.reads = ''
 params.krakendb = '/path/to/minikraken2_v2_8GB_201904_UPDATE.tgz'
 params.phred = 33
 params.results = './results'
+params.minhit = 50
 params.pairedEnd = true
 params.help = false
 
@@ -24,6 +25,7 @@ def helpMessage() {
       --krakendb                    Path to MiniKraken2_v2_8GB Database
 
     Settings:
+      --minhit                         Minimum number of Kraken hits to report Taxonomic level. Defaults to ${params.minhit}
       --phred                       Specifies the fastq quality encoding (33 | 64). Defaults to ${params.phred}
       --pairedEnd                   Specified if reads are paired-end (true | false). Default = ${params.pairedEnd}
 
@@ -121,7 +123,7 @@ process kraken_parse {
     script:
         out = name+".kraken_parsed.csv"
         """
-        kraken_parse.py $kraken_r
+        kraken_parse.py -c ${params.minhit} -o $out $kraken_r
         """    
 }
 
