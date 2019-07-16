@@ -8,7 +8,7 @@ params.krakendb = '/path/to/minikraken2_v2_8GB_201904_UPDATE.tgz'
 params.phred = 33
 params.results = './results'
 params.pairedEnd = true
-params.help == false
+params.help = false
 
 def helpMessage() {
     log.info"""
