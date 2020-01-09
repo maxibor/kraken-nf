@@ -54,6 +54,8 @@ process AdapterRemoval {
 
     label 'expresso'
 
+    ignore true
+
     input:
         set val(name), file(reads) from reads_to_trim
 
@@ -85,6 +87,8 @@ process miniKraken {
 
     label 'intenso'
 
+    ignore true
+
     input:
         set val(name), file(reads) from trimmed_reads
 
@@ -113,6 +117,8 @@ process kraken_parse {
     conda 'python=3.6'
 
     label 'ristretto'
+
+    ignore true
 
     input:
         set val(name), file(kraken_r) from kraken_report
