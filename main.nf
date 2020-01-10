@@ -120,6 +120,8 @@ process kraken_parse {
 
     errorStrategy 'ignore'
 
+    publishDir "${params.results}/kraken", mode: 'copy'
+
     input:
         set val(name), file(kraken_r) from kraken_report
 
