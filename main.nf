@@ -7,6 +7,7 @@ params.reads = ''
 params.krakendb = '/path/to/minikraken2_v2_8GB_201904_UPDATE.tgz'
 params.phred = 33
 params.results = './results'
+params.collapse = false
 params.minhit = 50
 params.pairedEnd = true
 params.help = false
@@ -50,40 +51,44 @@ Channel
 process AdapterRemoval {
     tag "$name"
 
+    label 'intenso'
+
     conda 'bioconda::adapterremoval'
-
-    label 'expresso'
-
-    errorStrategy 'ignore'
 
     input:
         set val(name), file(reads) from reads_to_trim
 
     output:
         set val(name), file('*.trimmed.fastq') into trimmed_reads
-        file("*.settings") into adapter_removal_results
+        set val(name), file("*.settings") into adapter_removal_results, adapter_removal_results_multiqc
 
     script:
-        out1 = name+".pair1.trimmed.fastq"
-        out2 = name+".pair2.trimmed.fastq"
-        se_out = name+".trimmed.fastq"
         settings = name+".settings"
-        if (params.pairedEnd){
+        if (params.pairedEnd && !params.collapse){
+            out1 = name+".pair1.trimmed.fastq"
+            out2 = name+".pair2.trimmed.fastq"
             """
             AdapterRemoval --basename $name --file1 ${reads[0]} --file2 ${reads[1]} --trimns --trimqualities --minquality 20 --minlength 30 --output1 $out1 --output2 $out2 --threads ${task.cpus} --qualitybase ${params.phred} --settings $settings
             """
-        } else {
+        } else if (params.pairedEnd && params.collapse) {
+            se_out = name+".trimmed.fastq"
+            """
+            AdapterRemoval --basename $name --file1 ${reads[0]} --file2 ${reads[1]} --trimns --trimqualities --minquality 20 --minlength 30 --collapse --outputcollapsed $se_out --threads ${task.cpus} --qualitybase ${params.phred} --settings $settings
+            """
+        } 
+        else {
+            se_out = name+".trimmed.fastq"
             """
             AdapterRemoval --basename $name --file1 ${reads[0]} --trimns --trimqualities --minquality 20 --minlength 30 --output1 $se_out --threads ${task.cpus} --qualitybase ${params.phred} --settings $settings
             """
-        }
-            
+        }       
 }
+
 
 process miniKraken {
     tag "$name"
 
-    conda 'bioconda::kraken2'
+    conda 'bioconda::kraken2=2.0.8_beta'
 
     label 'intenso'
 
@@ -99,7 +104,7 @@ process miniKraken {
     script:
         out = name+".kraken.out"
         kreport = name+".kreport"
-        if (params.pairedEnd){
+        if (params.pairedEnd && !params.collapse){
             """
             kraken2 --db ${params.krakendb} --threads ${task.cpus} --output $out --report $kreport --paired ${reads[0]} ${reads[1]}
             """    
