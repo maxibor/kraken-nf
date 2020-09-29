@@ -20,4 +20,4 @@ install:
   - source activate test-environment
 
 script:
-  - nextflow run main.nf -profile test --reads "./test/reads/*.{1,2}.fastq.gz" --krakendb "$PWD/test/kraken/simple" --phred 64
+  - nextflow run . -profile test

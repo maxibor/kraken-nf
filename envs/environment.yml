@@ -1,0 +1,12 @@
+name: kraken-nf
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - adapterremoval
+  - kraken2
+  - python
+  - pandas
+  - numpy
+  - multiqc

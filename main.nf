@@ -53,14 +53,12 @@ process AdapterRemoval {
 
     label 'intenso'
 
-    conda 'bioconda::adapterremoval'
-
     input:
         set val(name), file(reads) from reads_to_trim
 
     output:
         set val(name), file('*.trimmed.fastq') into trimmed_reads
-        set val(name), file("*.settings") into adapter_removal_results, adapter_removal_results_multiqc
+        file("*.settings") into adapter_removal_results_multiqc
 
     script:
         settings = name+".settings"
@@ -85,10 +83,8 @@ process AdapterRemoval {
 }
 
 
-process miniKraken {
+process kraken2 {
     tag "$name"
-
-    conda 'bioconda::kraken2=2.0.8_beta'
 
     label 'intenso'
 
@@ -116,10 +112,11 @@ process miniKraken {
         
 }
 
+kraken_report
+    .into {kraken_report_parse; kraken_report_multiqc} 
+
 process kraken_parse {
     tag "$name"
-
-    conda 'python=3.6'
 
     label 'ristretto'
 
@@ -128,7 +125,7 @@ process kraken_parse {
     publishDir "${params.results}/kraken", mode: 'copy'
 
     input:
-        set val(name), file(kraken_r) from kraken_report
+        set val(name), file(kraken_r) from kraken_report_parse
 
     output:
         set val(name), file('*.kraken_parsed.csv') into kraken_parsed
@@ -141,8 +138,6 @@ process kraken_parse {
 }
 
 process kraken_merge {
-
-    conda 'python=3.6 pandas numpy'
 
     label 'ristretto'
 
@@ -159,4 +154,24 @@ process kraken_merge {
         """
         merge_kraken_res.py -o $out
         """    
+}
+
+kraken_report_multiqc
+    .map {it -> it[1]}
+    .set {kraken_report_multiqc_file} 
+
+process multiqc {
+
+    publishDir "${params.results}/multiqc", mode: 'copy'
+
+    input:
+        path('adapterRemoval/*') from adapter_removal_results_multiqc.collect().ifEmpty([])
+        path('kraken/*') from kraken_report_multiqc_file.collect().ifEmpty([])
+    output:
+        path('*multiqc_report.html')
+    script:
+        """
+        multiqc .
+        """
+
 }
