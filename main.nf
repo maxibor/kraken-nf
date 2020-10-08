@@ -1,17 +1,5 @@
 #!/usr/bin/env nextflow
 
-
-
-
-params.reads = ''
-params.krakendb = '/path/to/minikraken2_v2_8GB_201904_UPDATE.tgz'
-params.phred = 33
-params.results = './results'
-params.collapse = false
-params.minhit = 50
-params.pairedEnd = true
-params.help = false
-
 def helpMessage() {
     log.info"""
      kraken-nf: simple Kraken2 Nextflow pipeline
@@ -24,9 +12,10 @@ def helpMessage() {
     Mandatory arguments:
       --reads                       Path to input data (must be surrounded with quotes)
       --krakendb                    Path to MiniKraken2_v2_8GB Database
+      --kraken_mem                  Memory allocated to kraken2. Ex: '4G'. Default to ${params.kraken_mem}
 
     Settings:
-      --minhit                         Minimum number of Kraken hits to report Taxonomic level. Defaults to ${params.minhit}
+      --minhit                      Minimum number of Kraken hits to report Taxonomic level. Defaults to ${params.minhit}
       --phred                       Specifies the fastq quality encoding (33 | 64). Defaults to ${params.phred}
       --pairedEnd                   Specified if reads are paired-end (true | false). Default = ${params.pairedEnd}
 
