@@ -79,6 +79,8 @@ process kraken2 {
 
     errorStrategy 'ignore'
 
+    publishDir "${params.results}/kraken", mode: 'copy', pattern: '*.kreport'
+
     input:
         set val(name), file(reads) from trimmed_reads
 
