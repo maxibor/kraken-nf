@@ -155,6 +155,8 @@ process multiqc {
 
     publishDir "${params.results}/multiqc", mode: 'copy'
 
+    label 'ristretto'
+
     input:
         path('adapterRemoval/*') from adapter_removal_results_multiqc.collect().ifEmpty([])
         path('kraken/*') from kraken_report_multiqc_file.collect().ifEmpty([])
