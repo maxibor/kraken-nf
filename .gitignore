@@ -5,6 +5,7 @@ __pycache__/
 
 .nextflow*
 work/
+results/
 
 # C extensions
 *.so

@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
+# Written by Maxime Borry and released under the MIT license. 
+# See git repository (https://github.com/nf-core/eager) for full license text.
+
 import argparse
 import os
 import pandas as pd
 import numpy as np
-
 
 def _get_args():
     '''This function parses and return arguments passed in'''
@@ -13,21 +15,29 @@ def _get_args():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description='Merging csv count files in one table')
     parser.add_argument(
-        '-o',
-        dest="output",
-        default=None,
-        help="Output file. Default = sources.csv")
+        '-or',
+        dest="readout",
+        default="kraken_read_count_table.csv",
+        help="Read count output file. Default = kraken_read_count_table.csv")
+    parser.add_argument(
+        '-ok',
+        dest="kmerout",
+        default="kraken_kmer_unicity_table.csv",
+        help="Kmer unicity output file. Default = kraken_kmer_unicity_table.csv")
 
     args = parser.parse_args()
 
-    outfile = args.output
+    readout = args.readout
+    kmerout = args.kmerout
 
-    return(outfile)
+    return(readout, kmerout)
 
 
 def get_csv():
     tmp = [i for i in os.listdir() if ".csv" in i]
-    return(tmp)
+    kmer = [i for i in tmp if '.kmer_' in i]
+    read = [i for i in tmp if '.read_' in i]
+    return(read, kmer)
 
 
 def _get_basename(file_name):
@@ -52,8 +62,9 @@ def write_csv(pd_dataframe, outfile):
 
 
 if __name__ == "__main__":
-    OUTFILE = _get_args()
-    all_csv = get_csv()
-    resdf = merge_csv(all_csv)
-    write_csv(resdf, "kraken_otu_table.csv")
-    print(resdf)
+    READOUT, KMEROUT = _get_args()
+    reads, kmers = get_csv()
+    read_df = merge_csv(reads)
+    kmer_df = merge_csv(kmers)
+    write_csv(read_df, READOUT)
+    write_csv(kmer_df, KMEROUT)

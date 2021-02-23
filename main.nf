@@ -86,25 +86,43 @@ process kraken2 {
 
     output:
         set val(name), file('*.kraken.out') into kraken_out
-        set val(name), file('*.kreport') into kraken_report
+        set val(name), file('*.kraken2_report') into kraken_report
 
     script:
         out = name+".kraken.out"
-        kreport = name+".kreport"
+        kreport = name+".kraken2_report"
         if (params.pairedEnd && !params.collapse){
             """
-            kraken2 --db ${params.krakendb} --threads ${task.cpus} --output $out --report $kreport --paired ${reads[0]} ${reads[1]}
+            kraken2 --db ${params.krakendb} --threads ${task.cpus} --output $out --report-minimizer-data --report $kreport --paired ${reads[0]} ${reads[1]}
             """    
         } else {
             """
-            kraken2 --db ${params.krakendb} --threads ${task.cpus} --output $out --report $kreport ${reads[0]}
+            kraken2 --db ${params.krakendb} --threads ${task.cpus} --output $out --report-minimizer-data --report $kreport ${reads[0]}
             """
         }
         
 }
 
 kraken_report
-    .into {kraken_report_parse; kraken_report_multiqc} 
+    .into {kraken_report_parse; kraken_report_back} 
+
+process kraken_report_backward_compatibility {
+  tag "$prefix"
+  label 'sc_tiny'
+
+  input:
+  tuple val(prefix), path(kraken_r) from kraken_report_back
+
+  output:
+  tuple prefix, path("*.kreport") into kraken_report_multiqc
+
+  script:
+  kreport = prefix+".kreport"
+
+  """
+  cut -f1-3,6-8 $kraken_r > $kreport
+  """
+}
 
 process kraken_parse {
     tag "$name"
@@ -119,13 +137,14 @@ process kraken_parse {
         set val(name), file(kraken_r) from kraken_report_parse
 
     output:
-        set val(name), file('*.kraken_parsed.csv') into kraken_parsed
+        file('*_kraken_parsed.csv') into kraken_parsed
 
     script:
-        out = name+".kraken_parsed.csv"
+        read_out = name+".read_kraken_parsed.csv"
+        kmer_out =  name+".kmer_kraken_parsed.csv"
         """
-        kraken_parse.py -c ${params.minhit} -o $out $kraken_r
-        """    
+        kraken_parse.py -c ${params.minhit} -or $read_out -ok $kmer_out $kraken_r
+        """
 }
 
 process kraken_merge {
@@ -138,12 +157,13 @@ process kraken_merge {
         file(csv_count) from kraken_parsed.collect()
 
     output:
-        file('kraken_otu_table.csv') into kraken_merged
+        file('*.csv') into kraken_merged
 
     script:
-        out = "kraken_otu_table.csv"
+        read_out = "kraken_read_count.csv"
+        kmer_out = "kraken_kmer_duplication.csv"
         """
-        merge_kraken_res.py -o $out
+        merge_kraken_res.py -or $read_out -ok $kmer_out
         """    
 }
 
