@@ -108,7 +108,8 @@ kraken_report
 
 process kraken_report_backward_compatibility {
   tag "$prefix"
-  label 'sc_tiny'
+
+  label 'ristretto'
 
   input:
   tuple val(prefix), path(kraken_r) from kraken_report_back
