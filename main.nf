@@ -79,18 +79,18 @@ process kraken2 {
 
     errorStrategy 'ignore'
 
-    publishDir "${params.results}/kraken", mode: 'copy', pattern: '*.kreport'
+    publishDir "${params.results}/kraken", mode: 'copy', pattern: '*.kraken2_minimizer_report'
 
     input:
         set val(name), file(reads) from trimmed_reads
 
     output:
         set val(name), file('*.kraken.out') into kraken_out
-        set val(name), file('*.kraken2_report') into kraken_report
+        set val(name), file('*.kraken2_minimizer_report') into kraken_report
 
     script:
         out = name+".kraken.out"
-        kreport = name+".kraken2_report"
+        kreport = name+".kraken2_minimizer_report"
         if (params.pairedEnd && !params.collapse){
             """
             kraken2 --db ${params.krakendb} --threads ${task.cpus} --output $out --report-minimizer-data --report $kreport --paired ${reads[0]} ${reads[1]}
@@ -110,6 +110,8 @@ process kraken_report_backward_compatibility {
   tag "$prefix"
 
   label 'ristretto'
+
+  publishDir "${params.results}/kraken", mode: 'copy', pattern: '*.kreport'
 
   input:
   tuple val(prefix), path(kraken_r) from kraken_report_back
