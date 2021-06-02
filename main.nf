@@ -11,6 +11,7 @@ def helpMessage() {
     nextflow run maxibor/kraken-nf --reads '/path/to/paired_end_reads_*.{1,2}.fastq.gz' --krakendb '/path/to/minikraken2_v2_8GB_201904_UPDATE.tgz'
     Mandatory arguments:
       --reads                       Path to input data (must be surrounded with quotes)
+      --sample_cat                  CSV file with header: name,dir,ext; name is sample ID, dir is /path/to/samples/to/cat, ext is extension to match paired (e.g. .1.fastq.gz;.2.fastq.gz); this option allows input of multiple fastqs per sample
       --krakendb                    Path to MiniKraken2_v2_8GB Database
       --kraken_mem                  Memory allocated to kraken2. Ex: '4G'. Default to ${params.kraken_mem}
 
@@ -31,11 +32,48 @@ if (params.help){
     exit 0
 }
 
-Channel
-    .fromFilePairs( params.reads, size: params.pairedEnd ? 2 : 1 )
-    .ifEmpty { exit 1, "Cannot find any reads matching: ${params.reads}\n" }
-	.set {reads_to_trim}
+if(!params.sample_cat){
+  Channel
+      .fromFilePairs( params.reads, size: params.pairedEnd ? 2 : 1 )
+      .ifEmpty { exit 1, "Cannot find any reads matching: ${params.reads}\n" }
+  	.set {reads_to_trim}
+}
+if(params.sample_cat){
+  Channel
+      .fromPath("${params.sample_cat}")
+      .splitCsv( header: true )
+      .map { row -> [row.name, row.dir, row.ext] }
+      .set { sample_cats }
 
+  // 0.000: Input trimming
+  process SampleCat {
+
+    label 'ristretto'
+
+    input:
+    tuple val(name), val(dir), val(ext) from sample_cats
+
+    output:
+    tuple val(name), file(reads) into reads_to_trim
+
+    script:
+    rdext = "${ext}".split(';')
+
+    if (params.pairedEnd){
+      reads = ["${name}.R1.fastq.gz", "${name}.R2.fastq.gz"]
+      """
+      cat \$(find ${dir} | grep ${rdext[0]} | sort) > ${reads[0]}
+      cat \$(find ${dir} | grep ${rdext[1]} | sort) > ${reads[1]}
+      """
+    }
+    else{
+      reads = "${name}.fastq.gz"
+      """
+      cat \$(find ${dir} | grep ${rdext[0]} | sort) > ${reads}
+      """
+    }
+  }
+}
 
 process AdapterRemoval {
     tag "$name"
@@ -62,13 +100,13 @@ process AdapterRemoval {
             """
             AdapterRemoval --basename $name --file1 ${reads[0]} --file2 ${reads[1]} --trimns --trimqualities --minquality 20 --minlength 30 --collapse --outputcollapsed $se_out --threads ${task.cpus} --qualitybase ${params.phred} --settings $settings
             """
-        } 
+        }
         else {
             se_out = name+".trimmed.fastq"
             """
             AdapterRemoval --basename $name --file1 ${reads[0]} --trimns --trimqualities --minquality 20 --minlength 30 --output1 $se_out --threads ${task.cpus} --qualitybase ${params.phred} --settings $settings
             """
-        }       
+        }
 }
 
 
@@ -94,17 +132,17 @@ process kraken2 {
         if (params.pairedEnd && !params.collapse){
             """
             kraken2 --db ${params.krakendb} --threads ${task.cpus} --output $out --report-minimizer-data --report $kreport --paired ${reads[0]} ${reads[1]}
-            """    
+            """
         } else {
             """
             kraken2 --db ${params.krakendb} --threads ${task.cpus} --output $out --report-minimizer-data --report $kreport ${reads[0]}
             """
         }
-        
+
 }
 
 kraken_report
-    .into {kraken_report_parse; kraken_report_back} 
+    .into {kraken_report_parse; kraken_report_back}
 
 process kraken_report_backward_compatibility {
   tag "$prefix"
@@ -167,12 +205,12 @@ process kraken_merge {
         kmer_out = "kraken_kmer_duplication.csv"
         """
         merge_kraken_res.py -or $read_out -ok $kmer_out
-        """    
+        """
 }
 
 kraken_report_multiqc
     .map {it -> it[1]}
-    .set {kraken_report_multiqc_file} 
+    .set {kraken_report_multiqc_file}
 
 process multiqc {
 
