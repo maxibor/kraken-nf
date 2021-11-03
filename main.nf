@@ -37,7 +37,7 @@ Channel
 	.set {reads_to_trim}
 
 Channel
-    .fromFile(params.krakendb)
+    .fromPath(params.krakendb, checkIfExists: true)
     .ifEmpty { exit 1, "Cannot find any KrakenDB matching: ${params.krakendb}\n" }
     .set {krakendb}
 
