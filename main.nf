@@ -39,6 +39,7 @@ Channel
 Channel
     .fromPath(params.krakendb, checkIfExists: true)
     .ifEmpty { exit 1, "Cannot find any KrakenDB matching: ${params.krakendb}\n" }
+    .first()
     .set {krakendb}
 
 process AdapterRemoval {
