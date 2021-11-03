@@ -44,7 +44,7 @@ Channel
 process AdapterRemoval {
     tag "$name"
 
-    label 'intenso'
+    label 'expresso'
 
     input:
         set val(name), file(reads) from reads_to_trim
