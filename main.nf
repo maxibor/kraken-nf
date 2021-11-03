@@ -36,6 +36,10 @@ Channel
     .ifEmpty { exit 1, "Cannot find any reads matching: ${params.reads}\n" }
 	.set {reads_to_trim}
 
+Channel
+    .fromFile(params.krakendb)
+    .ifEmpty { exit 1, "Cannot find any KrakenDB matching: ${params.krakendb}\n" }
+    .set {krakendb}
 
 process AdapterRemoval {
     tag "$name"
@@ -82,7 +86,8 @@ process kraken2 {
     publishDir "${params.results}/kraken", mode: 'copy', pattern: '*.kraken2_minimizer_report'
 
     input:
-        set val(name), file(reads) from trimmed_reads
+        set val(name), path(reads) from trimmed_reads
+        path db from krakendb
 
     output:
         set val(name), file('*.kraken.out') into kraken_out
@@ -93,11 +98,11 @@ process kraken2 {
         kreport = name+".kraken2_minimizer_report"
         if (params.pairedEnd && !params.collapse){
             """
-            kraken2 --db ${params.krakendb} --threads ${task.cpus} --output $out --report-minimizer-data --report $kreport --paired ${reads[0]} ${reads[1]}
+            kraken2 --db $db --threads ${task.cpus} --output $out --report-minimizer-data --report $kreport --paired ${reads[0]} ${reads[1]}
             """    
         } else {
             """
-            kraken2 --db ${params.krakendb} --threads ${task.cpus} --output $out --report-minimizer-data --report $kreport ${reads[0]}
+            kraken2 --db $db --threads ${task.cpus} --output $out --report-minimizer-data --report $kreport ${reads[0]}
             """
         }
         

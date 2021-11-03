@@ -5,7 +5,7 @@ channels:
   - defaults
 dependencies:
   - adapterremoval
-  - kraken2=2.1.1
+  - kraken2=2.1.2
   - python
   - pandas
   - numpy
