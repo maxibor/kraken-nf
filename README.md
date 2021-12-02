@@ -2,7 +2,7 @@
 
 # Kraken-nf
 
-Simple Kraken2 Nextflow pipeline
+Simple [Kraken2](https://github.com/DerrickWood/kraken2)/[Bracken](https://github.com/jenniferlu717/Bracken) Nextflow pipeline
 
 ## Dependancies
 
@@ -31,7 +31,7 @@ Use this to specify the location of your input FastQ files. For example:
 
 #### --krakendb
 
-Path to Kraken2 MiniKraken2_v2_8GB Database. Can be downloaded [here](https://ccb.jhu.edu/software/kraken2/index.shtml?t=downloads)
+Path to Kraken2 MiniKraken2_v2_8GB Database. A pre-build database can be downloaded [here](https://benlangmead.github.io/aws-indexes/k2)
 
 #### --kraken_mem
 
@@ -44,27 +44,20 @@ Example:
 --kraken_mem '9G'
 ```
 
-### Output
-
-#### kraken_otu_table.csv
-
-OTU table of all input samples.  
-Samples in columns, TAXID in rows
-
 ## Kraken2 database
 
-Any Kraken2 database can be used, but the _minikraken2_v2_8GB_ is a good compromise between speed and accuracy.  
-Please have a look at the [Kraken2 downloads page](https://ccb.jhu.edu/software/kraken2/index.shtml?t=downloads) to download it.
+Any Kraken2 database can be used, but the _PlusPFP-8_ is a good compromise between speed and accuracy.  
+Please have a look at the [Index zone](https://benlangmead.github.io/aws-indexes/k2) to download it.
 
 ## Help
 
 ```
 $ nextflow run maxibor/kraken-nf --help
-N E X T F L O W  ~  version 19.04.0
-Launching `maxibor/kraken-nf` [compassionate_morse] - revision: f534a6a703
-kraken-nf: simple Kraken2 Nextflow pipeline
+N E X T F L O W  ~  version 21.04.0
+
+ kraken-nf: simple Kraken2/Bracken Nextflow pipeline
  Homepage: https://github.com/maxibor/kraken-nf
- Author: Maxime Borry <borry@shh.mpg.de>
+ Author: Maxime Borry <maxime_borry@eva.mpg.de>
 =========================================
 Usage:
 The typical command for running the pipeline is as follows:
@@ -75,9 +68,14 @@ Mandatory arguments:
   --kraken_mem                  Memory allocated to kraken2. Ex: '4G'. Default to 9G
 
 Settings:
-  --minhit                      Minimum number of Kraken hits to report Taxonomic level. Defaults to 50
-  --phred                       Specifies the fastq quality encoding (33 | 64). Defaults to 64
+  --minimum_read_length         Minimum read length to keep. Default to null
+  --minhit                      Minimum number of Kraken hits to report Taxonomic level. Defaults to 10
+  --phred                       Specifies the fastq quality encoding (33 | 64). Defaults to 33
   --pairedEnd                   Specified if reads are paired-end (true | false). Default = true
+  --build_bracken_db            Build Bracken database (true | false). Default = false
+  --run_bracken                 Run Bracken (true | false). Default = true
+  --bracken_level               Specifies the taxonomic level for Bracken. Default = S
+  --bracken_threshold           Specifies the threshold for Bracken. Default = 10
 
 Options:
   --results                     The output directory where the results will be saved. Defaults to ./results
